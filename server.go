@@ -21,19 +21,32 @@ type HTTPServer struct {
 	router
 }
 
+func NewHTTPServer() *HTTPServer {
+	return &HTTPServer{
+		router: newRouter(),
+	}
+}
+
 // 确保 HTTPServer 肯定实现了 Server 接口
 var _ Server = &HTTPServer{}
 
 func (h *HTTPServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	ctx := Context{
-		req:  request,
-		resp: writer,
+	ctx := &Context{
+		Req:  request,
+		Resp: writer,
 	}
 	h.serve(ctx)
 }
 
-func (h *HTTPServer) serve(ctx Context) {
+func (h *HTTPServer) serve(ctx *Context) {
 	// 查找路径 & 执行业务
+	node, ok := h.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
+	if !ok || node.handler == nil {
+		ctx.Resp.WriteHeader(404)
+		ctx.Resp.Write([]byte("Not Found"))
+		return
+	}
+	node.handler(ctx)
 }
 
 func (h *HTTPServer) Start(addr string) error {
