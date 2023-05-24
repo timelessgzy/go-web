@@ -1,11 +1,11 @@
-package go_web
+package web
 
 import (
 	"net"
 	"net/http"
 )
 
-type HandleFunc func(ctx Context)
+type HandleFunc func(ctx *Context)
 
 type Server interface {
 	http.Handler
@@ -14,11 +14,15 @@ type Server interface {
 	Start(addr string) error
 
 	// AddRoute 注册路由
-	AddRoute(method string, path string, handler HandleFunc)
+	addRoute(method string, path string, handler HandleFunc)
 }
 
 type HTTPServer struct {
+	router
 }
+
+// 确保 HTTPServer 肯定实现了 Server 接口
+var _ Server = &HTTPServer{}
 
 func (h *HTTPServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	ctx := Context{
@@ -43,22 +47,22 @@ func (h *HTTPServer) Start(addr string) error {
 	return http.Serve(l, h)
 }
 
-func (h *HTTPServer) AddRoute(method string, path string, handler HandleFunc) {
-	// 添加到路由树中
-}
+//func (h *HTTPServer) addRoute(method string, path string, handler HandleFunc) {
+//	// 添加到路由树中
+//}
 
 func (h *HTTPServer) Get(path string, handler HandleFunc) {
-	h.AddRoute(http.MethodGet, path, handler)
+	h.addRoute(http.MethodGet, path, handler)
 }
 
 func (h *HTTPServer) Post(path string, handler HandleFunc) {
-	h.AddRoute(http.MethodPost, path, handler)
+	h.addRoute(http.MethodPost, path, handler)
 }
 
 func (h *HTTPServer) Put(path string, handler HandleFunc) {
-	h.AddRoute(http.MethodPut, path, handler)
+	h.addRoute(http.MethodPut, path, handler)
 }
 
 func (h *HTTPServer) Delete(path string, handler HandleFunc) {
-	h.AddRoute(http.MethodDelete, path, handler)
+	h.addRoute(http.MethodDelete, path, handler)
 }
