@@ -59,6 +59,12 @@ func (r *router) addRoute(method string, path string, handler HandleFunc) {
 // childOrCreate 查找子节点，如果子节点不存在就创建一个
 // 并且将子节点放回去了 children 中
 func (n *node) childOrCreate(path string) *node {
+	if path == "*" {
+		if n.starChild == nil {
+			n.starChild = &node{path: "*"}
+		}
+		return n.starChild
+	}
 	if n.children == nil {
 		n.children = make(map[string]*node)
 	}
@@ -94,9 +100,12 @@ func (r *router) findRoute(method string, path string) (*node, bool) {
 
 func (n *node) childOf(path string) (*node, bool) {
 	if n.children == nil {
-		return nil, false
+		return n.starChild, n.starChild != nil
 	}
 	res, ok := n.children[path]
+	if !ok {
+		return n.starChild, n.starChild != nil
+	}
 	return res, ok
 }
 
@@ -105,4 +114,6 @@ type node struct {
 	handler HandleFunc
 	// 子节点 path => node
 	children map[string]*node
+	// 通配符节点
+	starChild *node
 }
